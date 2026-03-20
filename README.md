@@ -73,7 +73,7 @@ When external disruptions hit — a cyclone in Chennai, a red-alert AQI day in D
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        AEGISHIELD PLATFORM                          │
+│                        AEGISYNC PLATFORM                            │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │  [ONBOARDING]                                                       │
