@@ -347,6 +347,108 @@ The worker-facing UI is **mobile-first**, designed for one-thumb navigation and 
 
 ---
 
+## Adversarial Defense & Anti-Spoofing Strategy
+
+> **Market Crash Response — Added under 24-hour compliance mandate.**
+> A coordinated syndicate exploiting GPS-spoofing to drain parametric insurance liquidity pools is not a hypothetical. GigShield was designed with this threat model in mind from day one. Here is our layered defense.
+
+---
+
+### 1. The Differentiation — Genuine Stranded Worker vs. GPS Spoofer
+
+The core insight: **a spoofed GPS signal is a perfect signal. A real worker in a storm is not.**
+
+Genuine workers in a weather disruption produce *messy, inconsistent, degraded* device telemetry — because storms destroy signal quality. Spoofers sitting at home on WiFi produce suspiciously clean data. GigShield's ML pipeline is built to treat "too clean" as a red flag.
+
+We run a **Behavioural Authenticity Score (BAS)** per claim, computed from five signal layers:
+
+| Signal Layer | What a Real Worker Shows | What a Spoofer Shows |
+|---|---|---|
+| **GPS Signal Quality** | Degraded HDOP (high dilution of precision), frequent signal drops matching rainfall intensity | Stable, high-accuracy coordinates — inconsistent with outdoor conditions in a red-alert zone |
+| **Accelerometer / Motion** | Micro-vibrations consistent with sitting on a stationary bike in rain (wind buffeting, seat movement) | Near-zero movement — consistent with lying on a couch |
+| **Network Switching Pattern** | Rapid 4G→2G→offline cycling as towers get congested in the storm | Stable WiFi or strong LTE throughout |
+| **Battery & Charging State** | Battery draining (bike/scooter running, no charger) | Often charging — home behaviour |
+| **App Interaction Pattern** | Worker opens GigShield, checks status, possibly tries to accept orders — desperate micro-interactions | No app interaction — claim fires passively |
+
+The BAS is a weighted ensemble score (0–100). BAS < 40 → automatic fraud flag. BAS 40–65 → secondary review queue. BAS > 65 → auto-approved.
+
+---
+
+### 2. The Data — Detecting a Coordinated Fraud Ring
+
+Individual GPS spoofing is hard to catch. **Coordinated ring behaviour is easy to catch** — because coordination leaves a statistical fingerprint that honest behaviour never produces.
+
+GigShield runs a **Syndicate Detection Engine** that analyzes claim batches at the zone level, not just individual claims:
+
+**Signal 1 — Temporal Clustering (The Smoking Gun)**
+Honest workers are distributed across a disruption window. Fraudsters coordinate via Telegram and tend to file within a narrow burst window. We flag any zone where >15% of claims arrive within a 4-minute window — statistically impossible under natural conditions.
+
+**Signal 2 — Device Fingerprint Graph**
+Every device has a fingerprint: OS version, screen resolution, battery model, network adapter MAC prefix. If 50 claims share the same GPS-spoofing app's characteristic mock-location provider string (`com.lexa.fakegps`, `com.incorporateapps.fakegps`, etc.), that string appears in Android's Location Provider metadata — which we collect at onboarding and at claim time.
+
+**Signal 3 — Social Graph Correlation**
+Workers who registered within the same 48-hour window, share a referral code chain, or operate on the same platform sub-zone cluster are tagged as a social graph cohort. A fraud ring typically recruits from within a network. If a cohort's claim rate is 4× the zone average, the entire cohort enters manual review — not just individual claims.
+
+**Signal 4 — Platform Order-Rate Inversion**
+This is our strongest signal. In a genuine disruption, Zomato/Swiggy's order volume in the zone drops sharply (customers don't order in floods). Our mock platform API monitors zone-level order activity. If a worker claims disruption income loss but the platform shows normal or elevated order activity in their zone, the claim is physically impossible. Instant rejection.
+
+**Signal 5 — Historical Velocity Profiling**
+A worker who has filed 0 claims in 6 months and suddenly files 3 in one week during their first major event is low-suspicion. A worker who consistently files the maximum allowable claims every single week, always at the exact threshold boundary, is running an optimization attack. Our velocity model flags the latter.
+
+---
+
+### 3. The UX Balance — Protecting Honest Workers from False Positives
+
+This is the hardest problem. A delivery partner already stressed by a storm should not face a Kafkaesque appeals process. Our principle: **the burden of proof is on GigShield's fraud engine, not on the worker.**
+
+**The Three-Tier Response System:**
+
+**Tier 1 — Auto-Approved (BAS > 65, no ring signals)**
+Payout fires within 15 minutes. Worker gets: *"₹520 credited. Stay safe."* No friction whatsoever.
+
+**Tier 2 — Soft Hold (BAS 40–65 OR one ring signal triggered)**
+Payout is held for up to 2 hours while passive secondary validation runs (checking if platform order rate drops, if weather signal strengthens, if other workers in zone auto-approve). Worker gets: *"Your claim is being verified — we'll update you within 2 hours."* If secondary signals confirm, payout fires automatically. Worker never had to do anything.
+
+**Tier 3 — Manual Review (BAS < 40 OR 2+ ring signals)**
+Worker is notified: *"We need a quick check on your claim. This doesn't mean it's rejected."* They are offered one optional step: a **15-second passive video** (not a selfie — just their surroundings, auto-uploaded). This is opt-in. If they submit it, a human reviewer (or Vision API) confirms environmental context (rain, outdoor setting). If they decline or can't connect, the claim stays pending for 24 hours and is re-evaluated against final weather event data.
+
+**The False Positive Safety Net:**
+If a Tier 3 claim is ultimately rejected but the weather event is later confirmed as qualifying by IMD data, the worker receives **automatic retroactive payout within 48 hours** — no appeal needed. This means an honest worker in a genuine storm with a dropped network can never permanently lose their claim. The system catches up to reality.
+
+**Why this works:**
+A real spoofer will not submit a genuine outdoor video. An honest worker in a storm almost certainly can — or will be caught up by the retroactive safety net regardless. The asymmetry is by design.
+
+---
+
+### Anti-Spoofing Tech Summary
+
+```
+Claim Received
+     │
+     ▼
+┌─────────────────────────────────┐
+│  Behavioural Authenticity Score │  ← GPS quality, motion, network, battery, app behaviour
+│  (Device Telemetry Layer)       │
+└────────────────┬────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────┐
+│  Syndicate Detection Engine     │  ← Temporal clustering, device fingerprints,
+│  (Population Layer)             │    social graph, platform order inversion, velocity
+└────────────────┬────────────────┘
+                 │
+         ┌───────┴────────┐
+         ▼                ▼
+    BAS > 65 &       BAS < 65 OR
+    No ring signal   Ring signal hit
+         │                │
+         ▼                ▼
+   AUTO-APPROVE      SOFT HOLD / MANUAL REVIEW
+   (< 15 min)        (Passive re-validation → Retroactive safety net)
+```
+
+---
+
 ## Financial Model
 
 ### Unit Economics (per worker, per week)
@@ -403,11 +505,6 @@ gigshield/
 │   └── demo-video-link.md
 └── README.md
 ```
-
----
-
-## Demo Video
-📹 **[Video Link — Phase 1 Strategy Walkthrough]** *(to be added)*
 
 ---
 
