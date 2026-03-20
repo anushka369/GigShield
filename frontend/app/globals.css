@@ -1,0 +1,220 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-primary: #FF6B00;
+  --brand-secondary: #1A1A2E;
+  --brand-accent: #00D4AA;
+  --brand-danger: #FF3B30;
+  --brand-warning: #FF9500;
+  --surface-1: #FFFFFF;
+  --surface-2: #F7F8FA;
+  --surface-3: #ECEEF2;
+  --text-primary: #1A1A2E;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --border: #E5E7EB;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.14);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 20px;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text-primary);
+  background: var(--surface-2);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Sora', sans-serif;
+}
+
+/* Rain animation for hero */
+@keyframes rain-drop {
+  0% {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.5;
+  }
+  95% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(110vh);
+    opacity: 0;
+  }
+}
+
+.rain-drop {
+  position: absolute;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.4));
+  animation: rain-drop linear infinite;
+  pointer-events: none;
+}
+
+/* Status badge utilities */
+.badge-approved {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+.badge-pending {
+  background: #FFF7ED;
+  color: #EA580C;
+}
+.badge-rejected {
+  background: #FEF2F2;
+  color: #DC2626;
+}
+.badge-manual_review {
+  background: #F3E8FF;
+  color: #9333EA;
+}
+
+/* Card base */
+.card {
+  background: var(--surface-1);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+/* Orange CTA button */
+.btn-primary {
+  background: var(--brand-primary);
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1.5rem;
+  transition: background 0.2s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+}
+.btn-primary:hover {
+  background: #e55e00;
+  transform: translateY(-1px);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1.5rem;
+  border: 1.5px solid var(--border);
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.btn-outline:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+/* Disruption alert pulse */
+@keyframes border-pulse {
+  0%, 100% { border-color: var(--brand-warning); }
+  50% { border-color: rgba(255, 149, 0, 0.3); }
+}
+
+.alert-pulse {
+  animation: border-pulse 2s ease-in-out infinite;
+}
+
+/* Progress bar animation */
+@keyframes progress-fill {
+  0% { width: 0%; }
+  100% { width: 72%; }
+}
+
+.progress-animate {
+  animation: progress-fill 2s ease-out forwards;
+}
+
+/* Fade in for disruption banner */
+@keyframes fade-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide {
+  animation: fade-slide-down 0.4s ease-out forwards;
+}
+
+/* Accordion */
+[data-radix-accordion-content] {
+  overflow: hidden;
+}
+[data-radix-accordion-content][data-state='open'] {
+  animation: accordion-down 0.2s ease-out;
+}
+[data-radix-accordion-content][data-state='closed'] {
+  animation: accordion-up 0.2s ease-out;
+}
+
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+
+/* Slider thumb */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--surface-3);
+  border-radius: 2px;
+  outline: none;
+  width: 100%;
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(255,107,0,0.4);
+}
