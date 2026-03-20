@@ -508,7 +508,7 @@ gigshield/
 
 ---
 
-## Team
+## Team AegisAI
 Built with React/Next.js · FastAPI · Python ML
 - Anushka Banerjee [@anushka369](https://github.com/anushka369/)
 - Harshul Bagri [@Harshul-Bagri](https://github.com/Harshul-Bagri/)
