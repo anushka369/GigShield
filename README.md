@@ -73,7 +73,7 @@ When external disruptions hit — a cyclone in Chennai, a red-alert AQI day in D
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        GIGSHIELD PLATFORM                           │
+│                        AEGISHIELD PLATFORM                          │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │  [ONBOARDING]                                                       │
@@ -509,7 +509,7 @@ aegisync/
 ---
 
 ## Team AegisAI
-Built with React/Next.js · FastAPI · Python ML · Anthropic Claude API
+Built with React/Next.js · FastAPI · Python ML
 - Anushka Banerjee [@anushka369](https://github.com/anushka369/)
 - Harshul Bagri [@Harshul-Bagri](https://github.com/Harshul-Bagri/)
 - Rajyalaxmi Mishra [@Rajyalaxmi300](https://github.com/Rajyalaxmi300/)
