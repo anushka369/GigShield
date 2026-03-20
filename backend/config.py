@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     dev_mode: bool = True
     simulate_outage: bool = False
     simulate_fraud: bool = False
+    dev_trigger_all: bool = False  # when True: weather/AQI mocks return above-threshold values
 
     openweathermap_api_key: str = ""
     openaq_api_key: str = ""

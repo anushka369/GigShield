@@ -1,1 +1,12 @@
-[]
+[
+  {"city": "Mumbai", "text": "Major bandh called by trade unions — all shops closed in Andheri and Bandra", "timestamp": "2026-03-20T08:00:00", "platform": "twitter"},
+  {"city": "Mumbai", "text": "Road blockade on Western Express Highway — avoid all travel today", "timestamp": "2026-03-20T08:15:00", "platform": "twitter"},
+  {"city": "Mumbai", "text": "Bandh in effect across Mumbai — delivery services suspended citywide", "timestamp": "2026-03-20T08:30:00", "platform": "instagram"},
+  {"city": "Delhi", "text": "Curfew imposed in parts of Old Delhi due to communal unrest — police deployed", "timestamp": "2026-03-20T07:00:00", "platform": "twitter"},
+  {"city": "Delhi", "text": "Road closures near Lajpat Nagar and Rohini — protest march blocking NH-24", "timestamp": "2026-03-20T07:30:00", "platform": "twitter"},
+  {"city": "Bengaluru", "text": "Heavy rain in Koramangala — roads waterlogged near forum mall", "timestamp": "2026-03-20T14:00:00", "platform": "twitter"},
+  {"city": "Bengaluru", "text": "BTM Layout flooded — avoid 100 Feet Road completely", "timestamp": "2026-03-20T14:30:00", "platform": "twitter"},
+  {"city": "Chennai", "text": "Flooding reported in Velachery underpass — avoid the area", "timestamp": "2026-03-20T10:00:00", "platform": "twitter"},
+  {"city": "Pune", "text": "Light showers expected in Kothrud today — carry umbrellas", "timestamp": "2026-03-20T09:00:00", "platform": "twitter"},
+  {"city": "Hyderabad", "text": "Normal conditions in Banjara Hills — restaurants open as usual", "timestamp": "2026-03-20T11:00:00", "platform": "instagram"}
+]

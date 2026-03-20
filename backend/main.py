@@ -12,9 +12,10 @@ from routers import workers as workers_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("GigShield API starting — scheduler placeholder")
+    from scheduler import start_scheduler, stop_scheduler
+    start_scheduler()
     yield
-    print("GigShield API shutting down")
+    stop_scheduler()
 
 
 app = FastAPI(

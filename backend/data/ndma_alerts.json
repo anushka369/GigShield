@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "state": "Karnataka",
+    "district": "Bengaluru Urban",
+    "severity": "red",
+    "alert_type": "flood",
+    "description": "IMD Red Alert: Heavy flooding expected in low-lying areas of Bengaluru Urban — Koramangala, BTM Layout and Bellandur most affected",
+    "issued_at": "2026-03-20T06:00:00",
+    "active": true
+  },
+  {
+    "state": "Maharashtra",
+    "district": "Mumbai",
+    "severity": "orange",
+    "alert_type": "flood",
+    "description": "IMD Orange Alert: Coastal flooding risk in Mumbai — high tide combined with heavy rainfall",
+    "issued_at": "2026-03-20T08:00:00",
+    "active": false
+  },
+  {
+    "state": "Tamil Nadu",
+    "district": "Chennai",
+    "severity": "red",
+    "alert_type": "flood",
+    "description": "IMD Red Alert: Cyclone-induced flooding across coastal Chennai — Velachery and Tambaram at high risk",
+    "issued_at": "2026-03-20T05:00:00",
+    "active": false
+  },
+  {
+    "state": "Delhi",
+    "district": "New Delhi",
+    "severity": "yellow",
+    "alert_type": "flood",
+    "description": "IMD Yellow Alert: Waterlogging expected in low-lying parts of New Delhi",
+    "issued_at": "2026-03-20T09:00:00",
+    "active": false
+  }
+]
