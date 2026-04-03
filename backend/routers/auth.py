@@ -9,6 +9,8 @@ from config import settings
 from database import get_db
 from models.worker import Worker
 from schemas.auth import (
+    AdminLoginRequest,
+    AdminLoginResponse,
     SendOtpRequest,
     SendOtpResponse,
     VerifyOtpRequest,
@@ -74,3 +76,12 @@ def verify_otp(body: VerifyOtpRequest, db: Session = Depends(get_db)):
             is_verified=worker.is_verified,
         ),
     )
+
+
+@router.post("/admin/login", response_model=AdminLoginResponse)
+def admin_login(body: AdminLoginRequest):
+    """Authenticate as admin using static credentials. Returns an admin-role JWT."""
+    if body.username != settings.admin_username or body.password != settings.admin_password:
+        raise HTTPException(status_code=401, detail="Invalid admin credentials")
+    token = _make_jwt("admin", settings.admin_username, role="admin")
+    return {"token": token, "role": "admin"}

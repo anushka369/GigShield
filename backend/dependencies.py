@@ -31,3 +31,20 @@ def get_current_worker(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Worker not found"
         )
     return worker
+
+
+def get_current_admin(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> str:
+    """Verify admin JWT and return the admin username."""
+    try:
+        payload = jwt.decode(
+            credentials.credentials, settings.jwt_secret, algorithms=["HS256"]
+        )
+        if payload.get("role") != "admin":
+            raise JWTError("Not admin")
+        return payload.get("phone", "admin")  # admin_username stored in 'phone' field
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required"
+        )

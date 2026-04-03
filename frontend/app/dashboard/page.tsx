@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Shield, AlertTriangle, TrendingUp, Clock, CheckCircle, XCircle, Eye } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import {
@@ -8,8 +8,11 @@ import {
   DEMO_POLICY,
   DEMO_CLAIMS,
   ACTIVE_DISRUPTION,
+  type Claim,
+  type Disruption,
 } from '@/lib/mockData'
 import { formatINR, formatDate, timeAgo, getDisruptionIcon, getStatusColor, getStatusBg } from '@/lib/utils'
+import api from '@/lib/api'
 
 const DONUT_DATA = [
   { name: 'Rainfall', value: 60, color: '#3B82F6' },
@@ -17,21 +20,41 @@ const DONUT_DATA = [
   { name: 'Outage', value: 15, color: '#F59E0B' },
 ]
 
-const totalProtected = DEMO_CLAIMS
-  .filter((c) => c.status === 'approved')
-  .reduce((sum, c) => sum + c.amount, 0)
-
-const approvedCount = DEMO_CLAIMS.filter((c) => c.status === 'approved').length
-const approvalRate = Math.round((approvedCount / DEMO_CLAIMS.length) * 100)
-
 export default function DashboardPage() {
+  const [workerData, setWorkerData] = useState<typeof DEMO_WORKER & {
+    policy: typeof DEMO_POLICY | null
+    recent_claims: Array<{
+      id: string; status: string; claim_type: string; amount: number
+      hours_lost: number | null; fraud_score: number | null; auto_approved: boolean; created_at: string
+    }>
+    total_earnings_protected: number
+  } | null>(null)
+  const [activeDisruptions, setActiveDisruptions] = useState<Disruption[]>([])
+  const [apiLoaded, setApiLoaded] = useState(false)
   const [showBanner, setShowBanner] = useState(false)
   const [progress, setProgress] = useState(35)
 
-  useEffect(() => {
-    const t = setTimeout(() => setShowBanner(true), 5000)
-    return () => clearTimeout(t)
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await api.get('/workers/me')
+      setWorkerData(res.data)
+      setApiLoaded(true)
+      const city = res.data.city
+      const zone = res.data.zone
+      const dres = await api.get(`/disruptions/active?city=${encodeURIComponent(city)}&zone=${encodeURIComponent(zone)}`)
+      setActiveDisruptions(dres.data)
+      if (dres.data.length > 0) setShowBanner(true)
+    } catch (e) {
+      console.error('[Dashboard] API call failed, using mock data', e)
+      setApiLoaded(false)
+    }
   }, [])
+
+  useEffect(() => {
+    fetchData()
+    const t = setInterval(fetchData, 10_000)
+    return () => clearInterval(t)
+  }, [fetchData])
 
   useEffect(() => {
     if (!showBanner) return
@@ -41,9 +64,44 @@ export default function DashboardPage() {
     return () => clearInterval(interval)
   }, [showBanner])
 
-  const expectedPayout = Math.round(
-    (DEMO_WORKER.avg_daily_earning / 8) * 3.5
-  )
+  // ── Derived display values ─────────────────────────────────────────────────
+
+  const worker = workerData ?? DEMO_WORKER
+  const policy = workerData?.policy ?? DEMO_POLICY
+
+  const claims: Claim[] = workerData?.recent_claims
+    ? workerData.recent_claims.map((c) => ({
+        id: c.id,
+        disruption_type: c.claim_type as Claim['disruption_type'],
+        city: workerData.city,
+        zone: workerData.zone,
+        status: c.status as Claim['status'],
+        amount: c.amount,
+        hours_lost: c.hours_lost ?? 0,
+        created_at: c.created_at,
+        auto_approved: c.auto_approved,
+        bas_score: 0,
+        fraud_score: c.fraud_score ?? 0,
+        processing_time: c.auto_approved ? '4m' : '—',
+        fraud_flags: [],
+      }))
+    : DEMO_CLAIMS
+
+  const totalProtected = workerData
+    ? workerData.total_earnings_protected
+    : DEMO_CLAIMS.filter((c) => c.status === 'approved').reduce((sum, c) => sum + c.amount, 0)
+
+  const approvedCount = claims.filter((c) => c.status === 'approved').length
+  const approvalRate = claims.length > 0 ? Math.round((approvedCount / claims.length) * 100) : 0
+
+  const activeDisruption: Disruption | null =
+    activeDisruptions.length > 0
+      ? activeDisruptions[0]
+      : apiLoaded
+        ? null
+        : ACTIVE_DISRUPTION
+
+  const expectedPayout = Math.round((worker.avg_daily_earning / 8) * 3.5)
 
   return (
     <div style={{ background: 'var(--surface-2)', minHeight: '100vh', padding: '1.5rem 1rem' }}>
@@ -52,15 +110,15 @@ export default function DashboardPage() {
         {/* Header */}
         <div style={{ marginBottom: '1.5rem' }}>
           <h1 className="font-display" style={{ fontSize: 'clamp(1.4rem, 4vw, 2rem)', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
-            Hey, {DEMO_WORKER.name.split(' ')[0]} 👋
+            Hey, {worker.name.split(' ')[0]} 👋
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            {DEMO_WORKER.zone}, {DEMO_WORKER.city} · {DEMO_WORKER.platform === 'swiggy' ? '🟠 Swiggy' : '🔴 Zomato'} Partner
+            {worker.zone}, {worker.city} · {worker.platform === 'swiggy' ? '🟠 Swiggy' : '🔴 Zomato'} Partner
           </p>
         </div>
 
         {/* Disruption Alert Banner */}
-        {showBanner && (
+        {showBanner && activeDisruption && (
           <div
             style={{
               background: 'var(--surface-1)',
@@ -74,19 +132,19 @@ export default function DashboardPage() {
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
               <div style={{ fontSize: '1.5rem', flexShrink: 0 }}>
-                {getDisruptionIcon(ACTIVE_DISRUPTION.type)}
+                {getDisruptionIcon(activeDisruption.type)}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.35rem' }}>
-                  <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.95rem' }}>
-                    ACTIVE: Heavy Rainfall Alert
+                  <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.95rem', textTransform: 'capitalize' }}>
+                    ACTIVE: {activeDisruption.type} Alert
                   </span>
                   <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: 100, background: '#FEF2F2', color: '#DC2626', textTransform: 'uppercase' }}>
-                    {ACTIVE_DISRUPTION.severity}
+                    {activeDisruption.severity}
                   </span>
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                  {ACTIVE_DISRUPTION.zone}, {ACTIVE_DISRUPTION.city} · Since {timeAgo(ACTIVE_DISRUPTION.started_at)} · {ACTIVE_DISRUPTION.trigger_value}mm/hr
+                  {activeDisruption.zone ? `${activeDisruption.zone}, ` : ''}{activeDisruption.city} · Since {timeAgo(activeDisruption.started_at)} · {activeDisruption.trigger_value}mm/hr
                 </p>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
                   Your claim is being processed automatically.{' '}
@@ -135,8 +193,8 @@ export default function DashboardPage() {
                     <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}>
                       AegiSync ACTIVE
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      Standard Plan · Week of {formatDate(DEMO_POLICY.start_date)} – 23 Mar
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
+                      {policy.tier} Plan · Week of {formatDate(policy.start_date)} – 23 Mar
                     </div>
                   </div>
                 </div>
@@ -147,9 +205,9 @@ export default function DashboardPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.25rem' }}>
                 {[
-                  { label: 'Weekly Premium', value: formatINR(DEMO_POLICY.weekly_premium) },
-                  { label: 'Coverage / Day', value: `Up to ${formatINR(DEMO_POLICY.coverage_per_day)}` },
-                  { label: 'Max Covered Days', value: `${DEMO_POLICY.max_days_per_week} days/week` },
+                  { label: 'Weekly Premium', value: formatINR(policy.weekly_premium) },
+                  { label: 'Coverage / Day', value: `Up to ${formatINR(policy.coverage_per_day)}` },
+                  { label: 'Max Covered Days', value: `${policy.max_days_per_week} days/week` },
                 ].map((s) => (
                   <div key={s.label}>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>{s.label}</div>
@@ -206,7 +264,7 @@ export default function DashboardPage() {
             <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: '1rem' }}>Quick Stats</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {[
-                { icon: <AlertTriangle size={16} style={{ color: '#F59E0B' }} />, label: 'Total Claims', value: DEMO_CLAIMS.length },
+                { icon: <AlertTriangle size={16} style={{ color: '#F59E0B' }} />, label: 'Total Claims', value: claims.length },
                 { icon: <CheckCircle size={16} style={{ color: '#16A34A' }} />, label: 'Approval Rate', value: `${approvalRate}%` },
                 { icon: <Clock size={16} style={{ color: 'var(--brand-primary)' }} />, label: 'Avg Payout Time', value: '4 min' },
               ].map((s) => (
@@ -224,11 +282,11 @@ export default function DashboardPage() {
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>Risk Profile</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <div style={{ flex: 1, height: 6, background: 'var(--surface-3)', borderRadius: 100, overflow: 'hidden' }}>
-                  <div style={{ width: `${((DEMO_WORKER.risk_score - 0.7) / 0.7) * 100}%`, height: '100%', background: 'var(--brand-primary)', borderRadius: 100 }} />
+                  <div style={{ width: `${((Number(worker.risk_score) - 0.7) / 0.7) * 100}%`, height: '100%', background: 'var(--brand-primary)', borderRadius: 100 }} />
                 </div>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--brand-primary)' }}>{DEMO_WORKER.risk_score}</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--brand-primary)' }}>{Number(worker.risk_score).toFixed(2)}</span>
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Zone risk score · Koramangala</div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Zone risk score · {worker.zone}</div>
             </div>
           </div>
         </div>
@@ -240,57 +298,64 @@ export default function DashboardPage() {
             <a href="/claims" style={{ fontSize: '0.8rem', color: 'var(--brand-primary)', fontWeight: 600, textDecoration: 'none' }}>View all →</a>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-            {DEMO_CLAIMS.map((claim, i) => (
-              <div
-                key={claim.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  padding: '0.875rem 0',
-                  borderBottom: i < DEMO_CLAIMS.length - 1 ? '1px solid var(--border)' : 'none',
-                  flexWrap: 'wrap',
-                }}
-              >
-                <div style={{ fontSize: '1.5rem', flexShrink: 0, width: 36, textAlign: 'center' }}>
-                  {getDisruptionIcon(claim.disruption_type)}
-                </div>
-                <div style={{ flex: 1, minWidth: 140 }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
-                    {claim.disruption_type.replace('_', ' ')}
+          {claims.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+              No claims yet — your first claim will appear here automatically when a disruption is detected.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+              {claims.map((claim, i) => (
+                <div
+                  key={claim.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    padding: '0.875rem 0',
+                    borderBottom: i < claims.length - 1 ? '1px solid var(--border)' : 'none',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div style={{ fontSize: '1.5rem', flexShrink: 0, width: 36, textAlign: 'center' }}>
+                    {getDisruptionIcon(claim.disruption_type)}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    {formatDate(claim.created_at)} · {claim.hours_lost}h lost
+                  <div style={{ flex: 1, minWidth: 140 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+                      {claim.disruption_type.replace('_', ' ')}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      {formatDate(claim.created_at)} · {claim.hours_lost}h lost
+                    </div>
                   </div>
-                </div>
-                <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                  {formatINR(claim.amount)}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{
-                    fontSize: '0.72rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: 100,
-                    background: getStatusBg(claim.status), color: getStatusColor(claim.status),
-                    textTransform: 'capitalize', whiteSpace: 'nowrap',
-                  }}>
-                    {claim.status.replace('_', ' ')}
-                  </span>
-                  {claim.processing_time !== '—' && (
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                      <Clock size={10} style={{ display: 'inline', marginRight: 2 }} />{claim.processing_time}
+                  <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                    {formatINR(claim.amount)}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{
+                      fontSize: '0.72rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: 100,
+                      background: getStatusBg(claim.status as Parameters<typeof getStatusBg>[0]),
+                      color: getStatusColor(claim.status as Parameters<typeof getStatusColor>[0]),
+                      textTransform: 'capitalize', whiteSpace: 'nowrap',
+                    }}>
+                      {claim.status.replace('_', ' ')}
                     </span>
-                  )}
+                    {claim.processing_time !== '—' && (
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                        <Clock size={10} style={{ display: 'inline', marginRight: 2 }} />{claim.processing_time}
+                      </span>
+                    )}
+                  </div>
+                  {claim.status === 'approved' ? (
+                    <CheckCircle size={16} style={{ color: '#16A34A', flexShrink: 0 }} />
+                  ) : claim.status === 'rejected' ? (
+                    <XCircle size={16} style={{ color: '#DC2626', flexShrink: 0 }} />
+                  ) : claim.status === 'manual_review' ? (
+                    <Eye size={16} style={{ color: '#9333EA', flexShrink: 0 }} />
+                  ) : null}
                 </div>
-                {claim.status === 'approved' ? (
-                  <CheckCircle size={16} style={{ color: '#16A34A', flexShrink: 0 }} />
-                ) : claim.status === 'rejected' ? (
-                  <XCircle size={16} style={{ color: '#DC2626', flexShrink: 0 }} />
-                ) : claim.status === 'manual_review' ? (
-                  <Eye size={16} style={{ color: '#9333EA', flexShrink: 0 }} />
-                ) : null}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

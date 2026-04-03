@@ -4,4 +4,5 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
 RUN python ml/train_models.py
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+RUN chmod +x /app/entrypoint.sh
+ENTRYPOINT ["/bin/bash", "/app/entrypoint.sh"]

@@ -31,3 +31,13 @@ class VerifyOtpResponse(BaseModel):
     phone: Optional[str] = None
     token: Optional[str] = None
     worker: Optional[WorkerOut] = None
+
+
+class AdminLoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class AdminLoginResponse(BaseModel):
+    token: str
+    role: str

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Shield, Check, ChevronDown, Loader2 } from 'lucide-react'
 import { TIER_CONFIG, ZONE_RISK_MAP, SEASONAL_FACTORS } from '@/lib/mockData'
 import { formatINR } from '@/lib/utils'
+import api from '@/lib/api'
+import { setToken } from '@/lib/auth'
 
 type Step = 1 | 2 | 3 | 4
 
@@ -104,6 +106,8 @@ export default function OnboardingPage() {
   const [otpError, setOtpError] = useState('')
   const [activating, setActivating] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [devOtp, setDevOtp] = useState('')
+  const [quotes, setQuotes] = useState<Record<string, { weekly_premium: number; daily_coverage_cap: number; max_days_per_week: number; max_hours_per_day: number }> | null>(null)
 
   const set = (key: keyof FormData, value: string | number) =>
     setForm((f) => ({ ...f, [key]: value }))
@@ -115,18 +119,34 @@ export default function OnboardingPage() {
     }
     setOtpError('')
     setOtpLoading(true)
-    await new Promise((r) => setTimeout(r, 1500))
-    setOtpLoading(false)
-    setOtpSent(true)
+    try {
+      const res = await api.post('/auth/send-otp', { phone: form.phone })
+      if (res.data.dev_otp) setDevOtp(res.data.dev_otp)
+      setOtpSent(true)
+    } catch (e) {
+      console.error('[Onboarding] send-otp failed, using mock', e)
+      setDevOtp('123456')
+      setOtpSent(true)
+    } finally {
+      setOtpLoading(false)
+    }
   }
 
-  const verifyOtp = () => {
-    if (form.otp !== '123456') {
-      setOtpError('Incorrect OTP. Use 123456 for demo.')
-      return
-    }
+  const verifyOtp = async () => {
     setOtpError('')
-    setStep(2)
+    try {
+      const res = await api.post('/auth/verify-otp', { phone: form.phone, otp: form.otp })
+      if (res.data.token) {
+        setToken(res.data.token)
+        router.push('/dashboard')
+        return
+      }
+      // new_user: true — continue to step 2
+      setStep(2)
+    } catch (e: unknown) {
+      const msg = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      setOtpError(msg ?? 'Incorrect OTP. Please try again.')
+    }
   }
 
   const getZones = () => (form.city ? Object.keys(ZONE_RISK_MAP[form.city] ?? {}) : [])
@@ -151,25 +171,61 @@ export default function OnboardingPage() {
     return Math.round(config.base * risk * seasonal)
   }
 
+  const fetchQuotes = async () => {
+    if (!form.city || !form.zone) return
+    try {
+      const res = await api.post('/policies/quote', { city: form.city, zone: form.zone })
+      setQuotes(res.data)
+    } catch (e) {
+      console.error('[Onboarding] quote fetch failed, using local calc', e)
+    }
+  }
+
   const activate = async () => {
     if (!form.tier) return
     setActivating(true)
-    await new Promise((r) => setTimeout(r, 1500))
-    const policy = {
-      worker_name: form.name,
-      platform: form.platform,
-      city: form.city,
-      zone: form.zone,
-      tier: form.tier,
-      weekly_premium: getQuote(form.tier as 'basic' | 'standard' | 'premium'),
-      coverage_per_day: TIER_CONFIG[form.tier as 'basic' | 'standard' | 'premium'].dailyCap,
-      status: 'active',
+    try {
+      const pincode = ZONE_RISK_MAP[form.city]?.[form.zone]?.pincode ?? '000000'
+      await api.post('/workers/register', {
+        name: form.name,
+        phone: form.phone,
+        email: null,
+        city: form.city,
+        zone: form.zone,
+        pincode,
+        platform: form.platform,
+        platform_id: form.platform_id || null,
+        upi_id: form.upi_id,
+        avg_daily_earning: form.avg_daily_earning,
+        years_active: form.years_active,
+        tier: form.tier,
+      })
+      // Auto-login: fresh OTP → verify → JWT
+      const otpRes = await api.post('/auth/send-otp', { phone: form.phone })
+      const verifyRes = await api.post('/auth/verify-otp', {
+        phone: form.phone,
+        otp: otpRes.data.dev_otp,
+      })
+      setToken(verifyRes.data.token)
+      setSuccess(true)
+      await new Promise((r) => setTimeout(r, 800))
+      router.push('/dashboard')
+    } catch (e) {
+      console.error('[Onboarding] register failed, falling back to mock', e)
+      // Mock fallback — still navigate to dashboard so demo never breaks
+      localStorage.setItem('aegisync_policy', JSON.stringify({
+        worker_name: form.name, platform: form.platform, city: form.city,
+        zone: form.zone, tier: form.tier,
+        weekly_premium: getQuote(form.tier as 'basic' | 'standard' | 'premium'),
+        coverage_per_day: TIER_CONFIG[form.tier as 'basic' | 'standard' | 'premium'].dailyCap,
+        status: 'active',
+      }))
+      setSuccess(true)
+      await new Promise((r) => setTimeout(r, 800))
+      router.push('/dashboard')
+    } finally {
+      setActivating(false)
     }
-    localStorage.setItem('aegisync_policy', JSON.stringify(policy))
-    setActivating(false)
-    setSuccess(true)
-    await new Promise((r) => setTimeout(r, 1200))
-    router.push('/dashboard')
   }
 
   const inputStyle: React.CSSProperties = {
@@ -239,10 +295,10 @@ export default function OnboardingPage() {
                       onChange={(e) => set('otp', e.target.value.replace(/\D/g, ''))}
                       style={{ ...inputStyle, letterSpacing: '0.3em', textAlign: 'center', border: '1.5px solid var(--brand-primary)' }} />
                     <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                      Demo: use code <strong style={{ color: 'var(--brand-primary)' }}>123456</strong>
+                      Demo: use code <strong style={{ color: 'var(--brand-primary)' }}>{devOtp || '123456'}</strong>
                     </p>
                   </div>
-                  <button className="btn-primary" onClick={verifyOtp} disabled={form.otp.length !== 6}
+                  <button className="btn-primary" onClick={() => { void verifyOtp() }} disabled={form.otp.length !== 6}
                     style={{ width: '100%', justifyContent: 'center', padding: '0.85rem', opacity: form.otp.length !== 6 ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     Verify &amp; Continue
                   </button>
@@ -359,7 +415,7 @@ export default function OnboardingPage() {
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>Payouts land directly here. Format: name@bank</p>
               </div>
 
-              <button className="btn-primary" onClick={() => setStep(4)} disabled={!form.city || !form.zone || !form.upi_id.includes('@')}
+              <button className="btn-primary" onClick={() => { fetchQuotes(); setStep(4) }} disabled={!form.city || !form.zone || !form.upi_id.includes('@')}
                 style={{ width: '100%', justifyContent: 'center', padding: '0.85rem', opacity: (!form.city || !form.zone || !form.upi_id.includes('@')) ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 View My Plans
               </button>
@@ -372,7 +428,10 @@ export default function OnboardingPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {(['basic', 'standard', 'premium'] as const).map((tier) => {
                 const config = TIER_CONFIG[tier]
-                const price = getQuote(tier)
+                const price = quotes?.[tier]?.weekly_premium ?? getQuote(tier)
+                const dailyCap = quotes?.[tier]?.daily_coverage_cap ?? config.dailyCap
+                const maxDays = quotes?.[tier]?.max_days_per_week ?? config.maxDays
+                const maxHours = quotes?.[tier]?.max_hours_per_day ?? config.maxHours
                 const isSelected = form.tier === tier
                 const isRecommended = tier === 'standard'
                 return (
@@ -392,16 +451,16 @@ export default function OnboardingPage() {
                       <div>
                         <div style={{ fontWeight: 700, textTransform: 'capitalize', fontSize: '1rem', color: 'var(--text-primary)' }}>{tier}</div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                          Up to {formatINR(config.dailyCap)}/day · {config.maxDays} days/wk · {config.maxHours} hrs/day
+                          Up to {formatINR(dailyCap)}/day · {maxDays} days/wk · {maxHours} hrs/day
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--brand-primary)' }}>₹{price}</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--brand-primary)' }}>₹{Math.round(price)}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>/week</div>
                       </div>
                     </div>
                     <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {[`≈₹${price * 4}/mo`, tier === 'basic' ? 'Rainfall only' : 'All 5 events', tier === 'premium' ? 'Priority payouts' : tier === 'standard' ? 'Auto-approve' : 'Basic coverage'].map((f) => (
+                      {[`≈₹${Math.round(price * 4)}/mo`, tier === 'basic' ? 'Rainfall only' : 'All 5 events', tier === 'premium' ? 'Priority payouts' : tier === 'standard' ? 'Auto-approve' : 'Basic coverage'].map((f) => (
                         <span key={f} style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem', borderRadius: 100, background: 'var(--surface-2)', color: 'var(--text-secondary)', fontWeight: 500 }}>{f}</span>
                       ))}
                     </div>
@@ -418,7 +477,7 @@ export default function OnboardingPage() {
                   style={{ width: '100%', justifyContent: 'center', padding: '0.85rem', marginTop: '0.5rem', opacity: !form.tier ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   {activating
                     ? <><Loader2 size={18} className="spin" /> Activating…</>
-                    : form.tier ? `Activate for ₹${getQuote(form.tier as 'basic' | 'standard' | 'premium')}/week` : 'Select a Plan'}
+                    : form.tier ? `Activate for ₹${Math.round(quotes?.[form.tier]?.weekly_premium ?? getQuote(form.tier as 'basic' | 'standard' | 'premium'))}/week` : 'Select a Plan'}
                 </button>
               )}
 
