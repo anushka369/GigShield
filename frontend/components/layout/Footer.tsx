@@ -10,7 +10,7 @@ export default function Footer() {
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 font-display font-bold text-xl mb-3">
               <Shield size={22} style={{ color: 'var(--brand-primary)' }} />
-              <span>Gig<span style={{ color: 'var(--brand-primary)' }}>Shield</span></span>
+              <span>Aegi<span style={{ color: 'var(--brand-primary)' }}>Sync</span></span>
             </div>
             <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem', lineHeight: 1.6 }}>
               When rain stops you,<br />we pay you.

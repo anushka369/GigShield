@@ -1,0 +1,112 @@
+{
+  "onboarding": {
+    "stepOf": "चरण {step} में से 4",
+    "step1": {
+      "title": "व्यक्तिगत विवरण",
+      "fullName": "पूरा नाम",
+      "phone": "फ़ोन नंबर",
+      "sendOtp": "OTP भेजें",
+      "sendingOtp": "OTP भेजा जा रहा है…",
+      "enterOtp": "OTP दर्ज करें",
+      "demoCode": "डेमो: यह कोड उपयोग करें",
+      "verifyContinue": "जाँचें और जारी रखें",
+      "phoneError": "10 अंकों का वैध फ़ोन नंबर दर्ज करें"
+    },
+    "step2": {
+      "title": "प्लेटफ़ॉर्म और कमाई",
+      "yourPlatform": "आपका प्लेटफ़ॉर्म",
+      "partnerId": "पार्टनर ID",
+      "optional": "(वैकल्पिक)",
+      "yearsOnPlatform": "प्लेटफ़ॉर्म पर वर्ष",
+      "avgDailyEarnings": "औसत दैनिक कमाई",
+      "weeklyEstimate": "साप्ताहिक कमाई का अनुमान:",
+      "continue": "जारी रखें",
+      "yr": "वर्ष",
+      "yrs": "वर्ष",
+      "perDay": "/दिन"
+    },
+    "step3": {
+      "title": "आपका क्षेत्र",
+      "city": "शहर",
+      "selectCity": "अपना शहर चुनें…",
+      "zoneLabel": "ज़ोन / मोहल्ला",
+      "selectZone": "अपना ज़ोन चुनें…",
+      "upiId": "UPI ID",
+      "upiPlaceholder": "yourname@upibank",
+      "upiHint": "भुगतान सीधे यहाँ आएगा। फ़ॉर्मेट: name@bank",
+      "viewPlans": "मेरे प्लान देखें",
+      "back": "← वापस",
+      "riskVeryHigh": "बहुत उच्च जोखिम क्षेत्र",
+      "riskHigh": "उच्च जोखिम क्षेत्र",
+      "riskModerate": "मध्यम जोखिम क्षेत्र",
+      "riskLower": "कम जोखिम क्षेत्र",
+      "riskScore": "जोखिम स्कोर"
+    },
+    "step4": {
+      "title": "अपना प्लान चुनें",
+      "recommended": "अनुशंसित",
+      "perWeek": "/सप्ताह",
+      "upTo": "अधिकतम",
+      "daysPerWk": "दिन/सप्ताह",
+      "hrsPerDay": "घंटे/दिन",
+      "rainfallOnly": "केवल बारिश",
+      "allEvents": "सभी 5 घटनाएँ",
+      "priorityPayouts": "प्राथमिकता भुगतान",
+      "autoApprove": "स्वतः स्वीकृत",
+      "basicCoverage": "बुनियादी कवरेज",
+      "activateFor": "₹{price}/सप्ताह पर सक्रिय करें",
+      "selectPlan": "प्लान चुनें",
+      "activating": "सक्रिय हो रहा है…",
+      "success": "✅ पॉलिसी सक्रिय! डैशबोर्ड पर जा रहे हैं…",
+      "back": "← वापस"
+    }
+  },
+  "dashboard": {
+    "greeting": "नमस्ते, {name} 👋",
+    "partner": "पार्टनर",
+    "alert": {
+      "active": "सक्रिय: {type} अलर्ट",
+      "location": "{zone}, {city}",
+      "since": "{timeAgo} से",
+      "processing": "आपका दावा स्वचालित रूप से प्रोसेस हो रहा है।",
+      "expectedPayout": "अपेक्षित भुगतान:",
+      "validating": "टेलीमेट्री जाँची जा रही है…"
+    },
+    "policy": {
+      "title": "AegiSync सक्रिय",
+      "planWeek": "{tier} प्लान · {date} का सप्ताह",
+      "active": "सक्रिय",
+      "weeklyPremium": "साप्ताहिक प्रीमियम",
+      "coveragePerDay": "प्रतिदिन कवरेज",
+      "maxCoveredDays": "अधिकतम कवर्ड दिन",
+      "upTo": "अधिकतम",
+      "daysPerWeek": "दिन/सप्ताह",
+      "managePolicy": "पॉलिसी प्रबंधित करें",
+      "pauseCoverage": "कवरेज रोकें"
+    },
+    "earnings": {
+      "title": "संरक्षित कमाई",
+      "acrossApproved": "इस महीने {count} स्वीकृत दावों में"
+    },
+    "chart": {
+      "rainfall": "बारिश",
+      "aqi": "AQI",
+      "outage": "आउटेज"
+    },
+    "quickStats": {
+      "title": "त्वरित आँकड़े",
+      "totalClaims": "कुल दावे",
+      "approvalRate": "स्वीकृति दर",
+      "avgPayoutTime": "औसत भुगतान समय",
+      "avgPayoutValue": "4 मिनट",
+      "riskProfile": "जोखिम प्रोफ़ाइल",
+      "zoneRiskScore": "ज़ोन जोखिम स्कोर · {zone}"
+    },
+    "claims": {
+      "title": "दावों का इतिहास",
+      "viewAll": "सभी देखें →",
+      "empty": "अभी कोई दावा नहीं — जब कोई व्यवधान पता चलेगा तो आपका पहला दावा यहाँ स्वतः दिखाई देगा।",
+      "hLost": "घंटे की हानि"
+    }
+  }
+}

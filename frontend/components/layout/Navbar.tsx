@@ -2,10 +2,63 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Menu, X, Shield } from 'lucide-react'
+import { useLanguage } from '@/components/providers/LanguageProvider'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
+  const pathname = usePathname()
+  const { locale, setLocale } = useLanguage()
+
+  const showToggle =
+    pathname.startsWith('/onboarding') || pathname.startsWith('/dashboard')
+
+  const LanguageToggle = () => (
+    <div
+      style={{
+        display: 'flex',
+        border: '1.5px solid var(--border)',
+        borderRadius: 8,
+        overflow: 'hidden',
+        flexShrink: 0,
+      }}
+    >
+      <button
+        onClick={() => setLocale('en')}
+        style={{
+          padding: '4px 10px',
+          background: locale === 'en' ? 'var(--brand-primary)' : 'transparent',
+          color: locale === 'en' ? 'white' : 'var(--text-secondary)',
+          fontWeight: 600,
+          fontSize: '0.78rem',
+          border: 'none',
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+          lineHeight: 1.4,
+        }}
+      >
+        EN
+      </button>
+      <button
+        onClick={() => setLocale('hi')}
+        style={{
+          padding: '4px 10px',
+          background: locale === 'hi' ? 'var(--brand-primary)' : 'transparent',
+          color: locale === 'hi' ? 'white' : 'var(--text-secondary)',
+          fontWeight: 600,
+          fontSize: '0.82rem',
+          border: 'none',
+          borderLeft: '1.5px solid var(--border)',
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+          lineHeight: 1.4,
+        }}
+      >
+        हिं
+      </button>
+    </div>
+  )
 
   return (
     <nav
@@ -24,11 +77,12 @@ export default function Navbar() {
           <span style={{ color: 'var(--brand-primary)' }}>
             <Shield size={24} />
           </span>
-          <span>Gig<span style={{ color: 'var(--brand-primary)' }}>Shield</span></span>
+          <span>Aegi<span style={{ color: 'var(--brand-primary)' }}>Sync</span></span>
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-6">
+        <div className="hidden md:flex items-center gap-4">
+          {showToggle && <LanguageToggle />}
           <Link href="/dashboard" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 500 }}>
             Dashboard
           </Link>
@@ -43,15 +97,18 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Mobile hamburger */}
-        <button
-          className="md:hidden p-2 rounded-lg"
-          style={{ color: 'var(--text-primary)' }}
-          onClick={() => setOpen(!open)}
-          aria-label="Toggle menu"
-        >
-          {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        {/* Mobile right: toggle + hamburger */}
+        <div className="md:hidden flex items-center gap-2">
+          {showToggle && <LanguageToggle />}
+          <button
+            className="p-2 rounded-lg"
+            style={{ color: 'var(--text-primary)' }}
+            onClick={() => setOpen(!open)}
+            aria-label="Toggle menu"
+          >
+            {open ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}

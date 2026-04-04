@@ -1,0 +1,112 @@
+{
+  "onboarding": {
+    "stepOf": "Step {step} of 4",
+    "step1": {
+      "title": "Personal Details",
+      "fullName": "Full Name",
+      "phone": "Phone Number",
+      "sendOtp": "Send OTP",
+      "sendingOtp": "Sending OTP…",
+      "enterOtp": "Enter OTP",
+      "demoCode": "Demo: use code",
+      "verifyContinue": "Verify & Continue",
+      "phoneError": "Enter a valid 10-digit phone number"
+    },
+    "step2": {
+      "title": "Platform & Earnings",
+      "yourPlatform": "Your Platform",
+      "partnerId": "Partner ID",
+      "optional": "(optional)",
+      "yearsOnPlatform": "Years on Platform",
+      "avgDailyEarnings": "Avg Daily Earnings",
+      "weeklyEstimate": "Weekly earnings estimate:",
+      "continue": "Continue",
+      "yr": "yr",
+      "yrs": "yrs",
+      "perDay": "/day"
+    },
+    "step3": {
+      "title": "Your Zone",
+      "city": "City",
+      "selectCity": "Select your city…",
+      "zoneLabel": "Zone / Neighbourhood",
+      "selectZone": "Select your zone…",
+      "upiId": "UPI ID",
+      "upiPlaceholder": "yourname@upibank",
+      "upiHint": "Payouts land directly here. Format: name@bank",
+      "viewPlans": "View My Plans",
+      "back": "← Back",
+      "riskVeryHigh": "Very High Risk Zone",
+      "riskHigh": "High Risk Zone",
+      "riskModerate": "Moderate Risk Zone",
+      "riskLower": "Lower Risk Zone",
+      "riskScore": "Risk score"
+    },
+    "step4": {
+      "title": "Choose Your Plan",
+      "recommended": "Recommended",
+      "perWeek": "/week",
+      "upTo": "Up to",
+      "daysPerWk": "days/wk",
+      "hrsPerDay": "hrs/day",
+      "rainfallOnly": "Rainfall only",
+      "allEvents": "All 5 events",
+      "priorityPayouts": "Priority payouts",
+      "autoApprove": "Auto-approve",
+      "basicCoverage": "Basic coverage",
+      "activateFor": "Activate for ₹{price}/week",
+      "selectPlan": "Select a Plan",
+      "activating": "Activating…",
+      "success": "✅ Policy activated! Redirecting to dashboard…",
+      "back": "← Back"
+    }
+  },
+  "dashboard": {
+    "greeting": "Hey, {name} 👋",
+    "partner": "Partner",
+    "alert": {
+      "active": "ACTIVE: {type} Alert",
+      "location": "{zone}, {city}",
+      "since": "Since {timeAgo}",
+      "processing": "Your claim is being processed automatically.",
+      "expectedPayout": "Expected payout:",
+      "validating": "Validating telemetry…"
+    },
+    "policy": {
+      "title": "AegiSync ACTIVE",
+      "planWeek": "{tier} Plan · Week of {date}",
+      "active": "ACTIVE",
+      "weeklyPremium": "Weekly Premium",
+      "coveragePerDay": "Coverage / Day",
+      "maxCoveredDays": "Max Covered Days",
+      "upTo": "Up to",
+      "daysPerWeek": "days/week",
+      "managePolicy": "Manage Policy",
+      "pauseCoverage": "Pause Coverage"
+    },
+    "earnings": {
+      "title": "Earnings Protected",
+      "acrossApproved": "Across {count} approved claims this month"
+    },
+    "chart": {
+      "rainfall": "Rainfall",
+      "aqi": "AQI",
+      "outage": "Outage"
+    },
+    "quickStats": {
+      "title": "Quick Stats",
+      "totalClaims": "Total Claims",
+      "approvalRate": "Approval Rate",
+      "avgPayoutTime": "Avg Payout Time",
+      "avgPayoutValue": "4 min",
+      "riskProfile": "Risk Profile",
+      "zoneRiskScore": "Zone risk score · {zone}"
+    },
+    "claims": {
+      "title": "Claims History",
+      "viewAll": "View all →",
+      "empty": "No claims yet — your first claim will appear here automatically when a disruption is detected.",
+      "hLost": "h lost"
+    }
+  }
+}

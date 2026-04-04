@@ -6,7 +6,10 @@ const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1'
 const api = axios.create({ baseURL: BASE })
 
 api.interceptors.request.use((config) => {
-  const token = getToken() ?? getAdminToken()
+  const url = config.url ?? ''
+  const token = url.includes('/admin/')
+    ? (getAdminToken() ?? getToken())
+    : (getToken() ?? getAdminToken())
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })

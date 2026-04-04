@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Shield, Check, ChevronDown, Loader2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { TIER_CONFIG, ZONE_RISK_MAP, SEASONAL_FACTORS } from '@/lib/mockData'
 import { formatINR } from '@/lib/utils'
 import api from '@/lib/api'
@@ -67,16 +68,17 @@ function ProgressBar({ step }: { step: Step }) {
 }
 
 function StepLabel({ step }: { step: Step }) {
+  const t = useTranslations('onboarding')
   const labels: Record<Step, string> = {
-    1: 'Personal Details',
-    2: 'Platform & Earnings',
-    3: 'Your Zone',
-    4: 'Choose Your Plan',
+    1: t('step1.title'),
+    2: t('step2.title'),
+    3: t('step3.title'),
+    4: t('step4.title'),
   }
   return (
     <div style={{ marginBottom: '1.5rem' }}>
       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.25rem' }}>
-        Step {step} of 4
+        {t('stepOf', { step })}
       </div>
       <h2 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>
         {labels[step]}
@@ -87,6 +89,7 @@ function StepLabel({ step }: { step: Step }) {
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const t = useTranslations('onboarding')
   const [step, setStep] = useState<Step>(1)
   const [form, setForm] = useState<FormData>({
     name: '',
@@ -114,7 +117,7 @@ export default function OnboardingPage() {
 
   const sendOtp = async () => {
     if (!/^\d{10}$/.test(form.phone)) {
-      setOtpError('Enter a valid 10-digit phone number')
+      setOtpError(t('step1.phoneError'))
       return
     }
     setOtpError('')
@@ -141,7 +144,6 @@ export default function OnboardingPage() {
         router.push('/dashboard')
         return
       }
-      // new_user: true — continue to step 2
       setStep(2)
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
@@ -156,10 +158,10 @@ export default function OnboardingPage() {
 
   const getRiskBadge = (risk: number | null) => {
     if (!risk) return null
-    if (risk >= 1.3) return { label: 'Very High Risk Zone', color: '#DC2626', icon: '🌧️' }
-    if (risk >= 1.2) return { label: 'High Risk Zone', color: '#EA580C', icon: '⚠️' }
-    if (risk >= 1.1) return { label: 'Moderate Risk Zone', color: '#D97706', icon: '🔶' }
-    return { label: 'Lower Risk Zone', color: '#16A34A', icon: '✅' }
+    if (risk >= 1.3) return { labelKey: 'step3.riskVeryHigh' as const, color: '#DC2626', icon: '🌧️' }
+    if (risk >= 1.2) return { labelKey: 'step3.riskHigh' as const, color: '#EA580C', icon: '⚠️' }
+    if (risk >= 1.1) return { labelKey: 'step3.riskModerate' as const, color: '#D97706', icon: '🔶' }
+    return { labelKey: 'step3.riskLower' as const, color: '#16A34A', icon: '✅' }
   }
 
   const getMonthlyFactor = () => SEASONAL_FACTORS[new Date().getMonth() + 1] ?? 1.0
@@ -200,7 +202,6 @@ export default function OnboardingPage() {
         years_active: form.years_active,
         tier: form.tier,
       })
-      // Auto-login: fresh OTP → verify → JWT
       const otpRes = await api.post('/auth/send-otp', { phone: form.phone })
       const verifyRes = await api.post('/auth/verify-otp', {
         phone: form.phone,
@@ -212,7 +213,6 @@ export default function OnboardingPage() {
       router.push('/dashboard')
     } catch (e) {
       console.error('[Onboarding] register failed, falling back to mock', e)
-      // Mock fallback — still navigate to dashboard so demo never breaks
       localStorage.setItem('aegisync_policy', JSON.stringify({
         worker_name: form.name, platform: form.platform, city: form.city,
         zone: form.zone, tier: form.tier,
@@ -255,7 +255,7 @@ export default function OnboardingPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem' }}>
             <Shield size={22} style={{ color: 'var(--brand-primary)' }} />
             <span className="font-display" style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
-              Gig<span style={{ color: 'var(--brand-primary)' }}>Shield</span>
+              Aegi<span style={{ color: 'var(--brand-primary)' }}>Sync</span>
             </span>
           </div>
 
@@ -267,14 +267,14 @@ export default function OnboardingPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div>
                 <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>
-                  Full Name
+                  {t('step1.fullName')}
                 </label>
                 <input type="text" placeholder="Rajesh Kumar" value={form.name} onChange={(e) => set('name', e.target.value)} style={inputStyle} />
               </div>
 
               <div>
                 <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>
-                  Phone Number
+                  {t('step1.phone')}
                 </label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <span style={{ padding: '0.75rem 1rem', background: 'var(--surface-2)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)', fontSize: '0.95rem', whiteSpace: 'nowrap' }}>+91</span>
@@ -285,22 +285,22 @@ export default function OnboardingPage() {
               {!otpSent ? (
                 <button className="btn-primary" onClick={sendOtp} disabled={otpLoading || !form.name || form.phone.length !== 10}
                   style={{ width: '100%', justifyContent: 'center', padding: '0.85rem', opacity: (!form.name || form.phone.length !== 10) ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {otpLoading ? <><Loader2 size={18} className="spin" /> Sending OTP…</> : 'Send OTP'}
+                  {otpLoading ? <><Loader2 size={18} className="spin" /> {t('step1.sendingOtp')}</> : t('step1.sendOtp')}
                 </button>
               ) : (
                 <>
                   <div>
-                    <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>Enter OTP</label>
+                    <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>{t('step1.enterOtp')}</label>
                     <input type="text" placeholder="123456" value={form.otp} maxLength={6} autoFocus
                       onChange={(e) => set('otp', e.target.value.replace(/\D/g, ''))}
                       style={{ ...inputStyle, letterSpacing: '0.3em', textAlign: 'center', border: '1.5px solid var(--brand-primary)' }} />
                     <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                      Demo: use code <strong style={{ color: 'var(--brand-primary)' }}>{devOtp || '123456'}</strong>
+                      {t('step1.demoCode')} <strong style={{ color: 'var(--brand-primary)' }}>{devOtp || '123456'}</strong>
                     </p>
                   </div>
                   <button className="btn-primary" onClick={() => { void verifyOtp() }} disabled={form.otp.length !== 6}
                     style={{ width: '100%', justifyContent: 'center', padding: '0.85rem', opacity: form.otp.length !== 6 ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    Verify &amp; Continue
+                    {t('step1.verifyContinue')}
                   </button>
                 </>
               )}
@@ -313,7 +313,7 @@ export default function OnboardingPage() {
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
-                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.75rem' }}>Your Platform</label>
+                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.75rem' }}>{t('step2.yourPlatform')}</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                   {(['zomato', 'swiggy'] as const).map((p) => (
                     <button key={p} onClick={() => set('platform', p)}
@@ -333,15 +333,15 @@ export default function OnboardingPage() {
 
               <div>
                 <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>
-                  Partner ID <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optional)</span>
+                  {t('step2.partnerId')} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>{t('step2.optional')}</span>
                 </label>
                 <input type="text" placeholder="SWG847291" value={form.platform_id} onChange={(e) => set('platform_id', e.target.value)} style={inputStyle} />
               </div>
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>Years on Platform</label>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--brand-primary)' }}>{form.years_active} yr{form.years_active !== 1 ? 's' : ''}</span>
+                  <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>{t('step2.yearsOnPlatform')}</label>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--brand-primary)' }}>{form.years_active} {form.years_active !== 1 ? t('step2.yrs') : t('step2.yr')}</span>
                 </div>
                 <input type="range" min={0} max={10} step={1} value={form.years_active} onChange={(e) => set('years_active', Number(e.target.value))} style={{ width: '100%' }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -351,21 +351,21 @@ export default function OnboardingPage() {
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>Avg Daily Earnings</label>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--brand-primary)' }}>{formatINR(form.avg_daily_earning)}/day</span>
+                  <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>{t('step2.avgDailyEarnings')}</label>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--brand-primary)' }}>{formatINR(form.avg_daily_earning)}{t('step2.perDay')}</span>
                 </div>
                 <input type="range" min={300} max={1500} step={50} value={form.avg_daily_earning} onChange={(e) => set('avg_daily_earning', Number(e.target.value))} style={{ width: '100%' }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                   <span>₹300</span><span>₹1,500</span>
                 </div>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                  Weekly earnings estimate: <strong style={{ color: 'var(--text-primary)' }}>~{formatINR(form.avg_daily_earning * 6)}</strong>
+                  {t('step2.weeklyEstimate')} <strong style={{ color: 'var(--text-primary)' }}>~{formatINR(form.avg_daily_earning * 6)}</strong>
                 </p>
               </div>
 
               <button className="btn-primary" onClick={() => setStep(3)} disabled={!form.platform}
                 style={{ width: '100%', justifyContent: 'center', padding: '0.85rem', opacity: !form.platform ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                Continue
+                {t('step2.continue')}
               </button>
             </div>
           )}
@@ -374,11 +374,11 @@ export default function OnboardingPage() {
           {step === 3 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div>
-                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>City</label>
+                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>{t('step3.city')}</label>
                 <div style={{ position: 'relative' }}>
                   <select value={form.city} onChange={(e) => { set('city', e.target.value); set('zone', '') }}
                     style={{ ...inputStyle, paddingRight: '2.5rem', appearance: 'none', cursor: 'pointer', color: form.city ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                    <option value="">Select your city…</option>
+                    <option value="">{t('step3.selectCity')}</option>
                     {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                   <ChevronDown size={16} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
@@ -386,11 +386,11 @@ export default function OnboardingPage() {
               </div>
 
               <div>
-                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>Zone / Neighbourhood</label>
+                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>{t('step3.zoneLabel')}</label>
                 <div style={{ position: 'relative' }}>
                   <select value={form.zone} onChange={(e) => set('zone', e.target.value)} disabled={!form.city}
                     style={{ ...inputStyle, paddingRight: '2.5rem', appearance: 'none', cursor: form.city ? 'pointer' : 'not-allowed', color: form.zone ? 'var(--text-primary)' : 'var(--text-muted)', opacity: form.city ? 1 : 0.6, background: form.city ? 'var(--surface-1)' : 'var(--surface-2)' }}>
-                    <option value="">Select your zone…</option>
+                    <option value="">{t('step3.selectZone')}</option>
                     {getZones().map((z) => <option key={z} value={z}>{z}</option>)}
                   </select>
                   <ChevronDown size={16} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
@@ -403,23 +403,23 @@ export default function OnboardingPage() {
                 return badge ? (
                   <div style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', background: `${badge.color}15`, border: `1px solid ${badge.color}40`, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: badge.color }}>
                     <span>{badge.icon}</span>
-                    {badge.label} · Risk score {risk?.toFixed(2)}
+                    {t(badge.labelKey)} · {t('step3.riskScore')} {risk?.toFixed(2)}
                   </div>
                 ) : null
               })()}
 
               <div>
-                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>UPI ID</label>
-                <input type="text" placeholder="yourname@upibank" value={form.upi_id} onChange={(e) => set('upi_id', e.target.value)}
+                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>{t('step3.upiId')}</label>
+                <input type="text" placeholder={t('step3.upiPlaceholder')} value={form.upi_id} onChange={(e) => set('upi_id', e.target.value)}
                   style={{ ...inputStyle, border: `1.5px solid ${form.upi_id && !form.upi_id.includes('@') ? 'var(--brand-danger)' : 'var(--border)'}` }} />
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>Payouts land directly here. Format: name@bank</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>{t('step3.upiHint')}</p>
               </div>
 
               <button className="btn-primary" onClick={() => { fetchQuotes(); setStep(4) }} disabled={!form.city || !form.zone || !form.upi_id.includes('@')}
                 style={{ width: '100%', justifyContent: 'center', padding: '0.85rem', opacity: (!form.city || !form.zone || !form.upi_id.includes('@')) ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                View My Plans
+                {t('step3.viewPlans')}
               </button>
-              <button onClick={() => setStep(2)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.875rem', fontFamily: 'inherit' }}>← Back</button>
+              <button onClick={() => setStep(2)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.875rem', fontFamily: 'inherit' }}>{t('step3.back')}</button>
             </div>
           )}
 
@@ -434,6 +434,11 @@ export default function OnboardingPage() {
                 const maxHours = quotes?.[tier]?.max_hours_per_day ?? config.maxHours
                 const isSelected = form.tier === tier
                 const isRecommended = tier === 'standard'
+                const tierFeatures = [
+                  `≈₹${Math.round(price * 4)}/mo`,
+                  tier === 'basic' ? t('step4.rainfallOnly') : t('step4.allEvents'),
+                  tier === 'premium' ? t('step4.priorityPayouts') : tier === 'standard' ? t('step4.autoApprove') : t('step4.basicCoverage'),
+                ]
                 return (
                   <div key={tier} onClick={() => set('tier', tier)}
                     style={{
@@ -444,23 +449,23 @@ export default function OnboardingPage() {
                     }}>
                     {isRecommended && (
                       <div style={{ position: 'absolute', top: '-12px', left: '1rem', background: 'var(--brand-primary)', color: 'white', fontSize: '0.7rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: 100, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                        Recommended
+                        {t('step4.recommended')}
                       </div>
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
                         <div style={{ fontWeight: 700, textTransform: 'capitalize', fontSize: '1rem', color: 'var(--text-primary)' }}>{tier}</div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                          Up to {formatINR(dailyCap)}/day · {maxDays} days/wk · {maxHours} hrs/day
+                          {t('step4.upTo')} {formatINR(dailyCap)}/day · {maxDays} {t('step4.daysPerWk')} · {maxHours} {t('step4.hrsPerDay')}
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--brand-primary)' }}>₹{Math.round(price)}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>/week</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('step4.perWeek')}</div>
                       </div>
                     </div>
                     <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {[`≈₹${Math.round(price * 4)}/mo`, tier === 'basic' ? 'Rainfall only' : 'All 5 events', tier === 'premium' ? 'Priority payouts' : tier === 'standard' ? 'Auto-approve' : 'Basic coverage'].map((f) => (
+                      {tierFeatures.map((f) => (
                         <span key={f} style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem', borderRadius: 100, background: 'var(--surface-2)', color: 'var(--text-secondary)', fontWeight: 500 }}>{f}</span>
                       ))}
                     </div>
@@ -470,18 +475,20 @@ export default function OnboardingPage() {
 
               {success ? (
                 <div style={{ padding: '1.25rem', borderRadius: 'var(--radius)', background: '#DCFCE7', border: '1px solid #16A34A40', textAlign: 'center', color: '#16A34A', fontWeight: 700 }}>
-                  ✅ Policy activated! Redirecting to dashboard…
+                  {t('step4.success')}
                 </div>
               ) : (
                 <button className="btn-primary" onClick={activate} disabled={!form.tier || activating}
                   style={{ width: '100%', justifyContent: 'center', padding: '0.85rem', marginTop: '0.5rem', opacity: !form.tier ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   {activating
-                    ? <><Loader2 size={18} className="spin" /> Activating…</>
-                    : form.tier ? `Activate for ₹${Math.round(quotes?.[form.tier]?.weekly_premium ?? getQuote(form.tier as 'basic' | 'standard' | 'premium'))}/week` : 'Select a Plan'}
+                    ? <><Loader2 size={18} className="spin" /> {t('step4.activating')}</>
+                    : form.tier
+                      ? t('step4.activateFor', { price: Math.round(quotes?.[form.tier]?.weekly_premium ?? getQuote(form.tier as 'basic' | 'standard' | 'premium')) })
+                      : t('step4.selectPlan')}
                 </button>
               )}
 
-              <button onClick={() => setStep(3)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.875rem', fontFamily: 'inherit' }}>← Back</button>
+              <button onClick={() => setStep(3)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.875rem', fontFamily: 'inherit' }}>{t('step4.back')}</button>
             </div>
           )}
         </div>

@@ -1,0 +1,26 @@
+{
+  "name": "AegiSync — Income Protection",
+  "short_name": "AegiSync",
+  "description": "Parametric income insurance for delivery partners. Disruptions detected automatically, payouts in minutes.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FF6B00",
+  "orientation": "portrait",
+  "categories": ["finance", "insurance"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
