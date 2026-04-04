@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Filter, AlertCircle, Clock, ChevronDown, ChevronUp } from 'lucide-react'
-import { DEMO_CLAIMS, type ClaimStatus, type DisruptionType } from '@/lib/mockData'
+import { DEMO_CLAIMS, type Claim, type ClaimStatus, type DisruptionType } from '@/lib/mockData'
 import { formatINR, formatDate, getDisruptionIcon, getStatusColor, getStatusBg } from '@/lib/utils'
+import api from '@/lib/api'
 
 const STATUS_OPTIONS: { value: 'all' | ClaimStatus; label: string }[] = [
   { value: 'all', label: 'All Status' },
@@ -26,8 +27,39 @@ export default function ClaimsPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | ClaimStatus>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | DisruptionType>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [apiClaims, setApiClaims] = useState<Claim[] | null>(null)
 
-  const filtered = DEMO_CLAIMS.filter((c) => {
+  useEffect(() => {
+    api.get('/workers/me')
+      .then((res) => {
+        const workerCity: string = res.data.city
+        const workerZone: string = res.data.zone
+        const mapped: Claim[] = (res.data.recent_claims ?? []).map((c: {
+          id: string; status: string; claim_type: string; amount: number
+          hours_lost: number | null; fraud_score: number | null; auto_approved: boolean; created_at: string
+        }) => ({
+          id: c.id,
+          disruption_type: c.claim_type as DisruptionType,
+          city: workerCity,
+          zone: workerZone,
+          status: c.status as ClaimStatus,
+          amount: c.amount,
+          hours_lost: c.hours_lost ?? 0,
+          created_at: c.created_at,
+          auto_approved: c.auto_approved,
+          bas_score: 0,
+          fraud_score: c.fraud_score ?? 0,
+          processing_time: c.auto_approved ? '4m' : '—',
+          fraud_flags: [],
+        }))
+        setApiClaims(mapped)
+      })
+      .catch((e) => console.error('[Claims] API failed, using mock', e))
+  }, [])
+
+  const claims = apiClaims ?? DEMO_CLAIMS
+
+  const filtered = claims.filter((c) => {
     if (statusFilter !== 'all' && c.status !== statusFilter) return false
     if (typeFilter !== 'all' && c.disruption_type !== typeFilter) return false
     return true
@@ -45,7 +77,7 @@ export default function ClaimsPage() {
             Claims History
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            {DEMO_CLAIMS.length} total claims · {formatINR(totalAmount)} received
+            {claims.length} total claims · {formatINR(totalAmount)} received
           </p>
         </div>
 

@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from routers import admin as admin_router
 from routers import auth as auth_router
+from routers import disruptions as disruptions_router
 from routers import policies as policies_router
 from routers import workers as workers_router
 
@@ -28,7 +29,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=[f"http://localhost:{p}" for p in range(3000, 3020)] + ["http://localhost:8000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -45,6 +46,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(auth_router.router, prefix="/api/v1")
 app.include_router(policies_router.router, prefix="/api/v1")
 app.include_router(workers_router.router, prefix="/api/v1")
+app.include_router(disruptions_router.router, prefix="/api/v1")
 app.include_router(admin_router.router, prefix="/api/v1")
 
 

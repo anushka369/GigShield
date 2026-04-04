@@ -48,7 +48,15 @@ def _create_disruption(
     db.add(d)
     db.commit()
     db.refresh(d)
-    print(f"[TRIGGER] {dtype}/{severity} in {city} ({zone or 'city-wide'}) — value={trigger_value}")
+    print(f"[TRIGGER] {dtype}/{severity} in {city} ({zone or 'city-wide'}) -- value={trigger_value}")
+
+    # Auto-create claims for all affected workers
+    try:
+        from services.claim_processor import auto_create_claims_for_disruption
+        auto_create_claims_for_disruption(d, db)
+    except Exception as e:
+        print(f"[WARN] claim_processor dispatch failed for disruption {d.id}: {e}")
+
     return d
 
 

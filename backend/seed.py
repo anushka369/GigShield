@@ -314,17 +314,17 @@ def seed():
 
         # 5 rejected — fraud score high
         FRAUD_FLAG_SETS = [
-            ["GPS signal quality 97% — inconsistent with extreme rainfall conditions",
-             "Network switched 0 times in 6 hours — suggests indoor WiFi connection"],
-            ["Motion score 0.02 — device stationary for entire disruption window",
-             "temporal_clustering — 18% of zone claims arrived within 3-minute window"],
-            ["platform_order_inversion — platform order rate normal during claimed disruption",
-             "velocity_anomaly — 3 claims filed in past 7 days"],
-            ["cohort_registration_burst — registered in same 48-hour window as 14 other claimants",
-             "GPS signal quality 96% — too clean for outdoor storm conditions"],
-            ["Motion score 0.01 — no movement detected",
+            ["GPS signal quality 97% - inconsistent with extreme rainfall conditions",
+             "Network switched 0 times in 6 hours - suggests indoor WiFi connection"],
+            ["Motion score 0.02 - device stationary for entire disruption window",
+             "temporal_clustering - 18% of zone claims arrived within 3-minute window"],
+            ["platform_order_inversion - platform order rate normal during claimed disruption",
+             "velocity_anomaly - 3 claims filed in past 7 days"],
+            ["cohort_registration_burst - registered in same 48-hour window as 14 other claimants",
+             "GPS signal quality 96% - too clean for outdoor storm conditions"],
+            ["Motion score 0.01 - no movement detected",
              "Network stable on WiFi for full claim window",
-             "velocity_anomaly — maximum weekly claims exceeded"],
+             "velocity_anomaly - maximum weekly claims exceeded"],
         ]
         reject_pool = del_workers[3:] + mum_workers[3:]
         for idx, (w, p) in enumerate(reject_pool[:5]):
@@ -414,9 +414,9 @@ def seed():
             fraud_score=68.0,
             bas_score=52.0,
             fraud_flags=[
-                "GPS signal quality 94% — inconsistent with severe rainfall conditions",
-                "Network switched 0 times in 4 hours — suggests indoor WiFi connection",
-                "Motion score 0.03 — device stationary for entire disruption window",
+                "GPS signal quality 94% - inconsistent with severe rainfall conditions",
+                "Network switched 0 times in 4 hours - suggests indoor WiFi connection",
+                "Motion score 0.03 - device stationary for entire disruption window",
             ],
             review_reason="Multiple behavioural signals inconsistent with outdoor storm conditions.",
             auto_approved=False,

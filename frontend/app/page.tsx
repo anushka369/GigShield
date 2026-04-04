@@ -139,6 +139,7 @@ const FAQ_ITEMS = [
 
 // ─── FAQ Accordion (client component) ────────────────────────────────────────
 import FaqAccordion from '@/components/shared/FaqAccordion'
+import PricingCards from '@/components/shared/PricingCards'
 
 // ─── Landing Page ─────────────────────────────────────────────────────────────
 
@@ -236,62 +237,7 @@ export default function LandingPage() {
               Final premium adjusted by your zone risk and season. No hidden fees.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TIERS.map((tier) => (
-              <div
-                key={tier.name}
-                className="card p-6"
-                style={{
-                  border: tier.recommended ? '2px solid var(--brand-primary)' : '1px solid var(--border)',
-                  position: 'relative',
-                  transform: tier.recommended ? 'scale(1.02)' : 'none',
-                }}
-              >
-                {tier.recommended && (
-                  <div
-                    style={{
-                      position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
-                      background: 'var(--brand-primary)', color: 'white',
-                      padding: '0.2rem 0.9rem', borderRadius: 20,
-                      fontSize: '0.75rem', fontWeight: 700, whiteSpace: 'nowrap',
-                    }}
-                  >
-                    Most Popular
-                  </div>
-                )}
-                <h3 className="font-display font-bold mb-1" style={{ fontSize: '1.1rem' }}>{tier.name}</h3>
-                <div style={{ marginBottom: '0.25rem' }}>
-                  <span className="font-display font-bold" style={{ fontSize: '2.25rem', color: 'var(--brand-primary)' }}>
-                    ₹{tier.weekly}
-                  </span>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>/week</span>
-                </div>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '1.25rem' }}>
-                  ≈ ₹{tier.weekly * 4}/month · ₹{tier.dailyCap}/day cap
-                </p>
-                <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: '1.5rem' }}>
-                  {tier.features.map((f) => (
-                    <li key={f} style={{ display: 'flex', gap: 8, fontSize: '0.875rem', color: 'var(--text-secondary)', alignItems: 'flex-start' }}>
-                      <CheckCircle size={15} style={{ color: 'var(--brand-accent)', flexShrink: 0, marginTop: 2 }} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/onboarding"
-                  className="btn-primary"
-                  style={{
-                    width: '100%', justifyContent: 'center', textDecoration: 'none',
-                    background: tier.recommended ? 'var(--brand-primary)' : 'transparent',
-                    color: tier.recommended ? 'white' : 'var(--brand-primary)',
-                    border: tier.recommended ? 'none' : '2px solid var(--brand-primary)',
-                  }}
-                >
-                  Get {tier.name} — ₹{tier.weekly}/week
-                </Link>
-              </div>
-            ))}
-          </div>
+          <PricingCards />
         </div>
       </section>
 
